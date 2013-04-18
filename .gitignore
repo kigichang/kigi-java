@@ -1,0 +1,12 @@
+.buildpath
+.metadata
+.project
+.settings
+*.bak
+.DS_Store
+Thumbs.db
+*.log
+tmp
+*.class
+build
+target
