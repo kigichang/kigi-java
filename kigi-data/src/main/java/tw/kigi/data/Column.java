@@ -25,7 +25,7 @@ public final class Column {
 	private Object defaultValue = null;
 	private String expression = null;
 	
-	private boolean _expression = false;
+	private Expr expr = Expr.NO;
 	
 	private boolean primary = false;
 	
@@ -60,8 +60,20 @@ public final class Column {
 		
 		label = new StringBuilder(clazz.getSimpleName()).append('_').append(propertyName).toString();
 				
-		expression = property.expression();
-		_expression = !"".equals(expression);
+		//expression = property.expression();
+		//_expression = !"".equals(expression);
+		if ("".equals(property.expression()) && "".equals(property.expression())) {
+			expr = Expr.NO;
+			expression = "";
+		}
+		else if (!"".equals(property.expression())) {
+			expr = Expr.OTHER;
+			expression = property.expression();
+		}
+		else if (!"".equals(property.group())) {
+			expr = Expr.GROUP;
+			expression = property.group();
+		}
 		
 		primary = property.primary();
 		autoIncrement = property.autoIncrement();
@@ -99,8 +111,11 @@ public final class Column {
 	public String getExpression() {
 		return expression;
 	}
+	public Expr getExprType() {
+		return expr;
+	}
 	public boolean isExpression() {
-		return _expression;
+		return expr != Expr.NO;
 	}
 	public boolean isPrimary() {
 		return primary;

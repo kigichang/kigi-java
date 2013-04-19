@@ -53,6 +53,8 @@ public @interface Property {
 	 */
 	String expression() default "";
 	
+	String group() default "";
+	
 	/**
 	 * Is the column primary
 	 * @return
