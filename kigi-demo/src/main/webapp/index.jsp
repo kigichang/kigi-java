@@ -36,7 +36,10 @@ q.properties("CategoryId", "Entry", "DocNo", "Memo", "Money", "Deleted", "Create
 
 java.math.BigDecimal id = (java.math.BigDecimal)q.getLastInsertId();
 
-q.properties("CategoryId", "Money").condition("Item.Id = ?").values(new Long(1), new Integer(5), new java.math.BigDecimal(20)).update();
+q.properties("CategoryId", "Money")
+    .condition("Item.Id = ?")
+    .values(new Long(1), new Integer(5), new java.math.BigDecimal(20))
+    .update();
 //q.clear();
 
 q.condition("Item.Id = ?").values(new java.math.BigDecimal(20)).delete();

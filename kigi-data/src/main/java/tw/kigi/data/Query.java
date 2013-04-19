@@ -18,16 +18,20 @@ public abstract class Query<T> {
 	protected Schema schema = null;
 	protected Connection conn = null;
 	
-	protected String[] properties = null;
+	protected Column[] properties = null;
 	protected String condition = null;
 	protected String having = null;
-	protected String[] group = null;
+	protected Column[] group = null;
 	protected List<Sort> order = new ArrayList<Sort>();
 	protected Object[] values = null;
 	protected Object lastInsertId = null;
 	protected boolean needGenerateKeys = false;
 	protected Class<T> clazz = null;
-	protected StringBuilder sql = new StringBuilder();;
+	
+	protected StringBuilder sql = null;
+	protected byte expr = Expr.NO.byteValue();
+	
+	public abstract T[] paginate(int start, int length) throws SQLException, ParseException;
 	
 	public Query(Connection conn, Class<T> clazz) throws SQLException {
 		this.clazz = clazz;
@@ -43,11 +47,23 @@ public abstract class Query<T> {
 		order.clear();
 		values = null;
 		needGenerateKeys = false;
+		expr = Expr.NO.byteValue();
 		return this;
 	}
 	
-	public Query<T> properties(String... properties) {
-		this.properties = schema.append(properties);
+	protected Column[] convertStringToColumn(String... properties) throws SQLException {
+		String[] tmp = schema.append(properties);
+		List<Column> cols = new ArrayList<Column>();
+		for(String p : tmp) {
+			Column c = schema.getColumnByProperty(p);
+			cols.add(c);
+		}
+		
+		return cols.toArray(new Column[cols.size()]);
+	}
+	
+	public Query<T> properties(String... properties) throws SQLException {
+		this.properties = convertStringToColumn(properties);
 		return this;
 	}
 	
@@ -61,8 +77,11 @@ public abstract class Query<T> {
 		return this;
 	}
 	
-	public Query<T> group(String... group) {
-		this.group = schema.append(group);
+	public Query<T> group(String... group) throws SQLException {
+		this.group = convertStringToColumn(group);
+		if (this.group != null && this.group.length > 0) {
+			return expr(Expr.GROUP);
+		}
 		return this;
 	}
 	
@@ -78,33 +97,47 @@ public abstract class Query<T> {
 		return this;
 	}
 	
-	public abstract T[] paginate(int start, int length) throws SQLException, ParseException;
-	
-	
-	protected String generateSelect(String[] properties) throws SQLException {
-		StringBuilder sb = new StringBuilder("SELECT ");
-		for (String property: properties) {
-			Column column = schema.getColumnByProperty(property);
-			if (column.isExpression()) {
-				sb.append('(').append(column.getExpression()).append(") AS ").append(column.getLabel()).append(',');
-			}
-			else {
-				sb.append(column.getFullColumnName()).append(" AS ").append(column.getLabel()).append(',');
+	public Query<T> expr(Expr... expr) {
+		if (expr == null) {
+			this.expr = Expr.NO.byteValue();
+		}
+		else {
+			for (Expr e : expr) {
+				this.expr |= e.byteValue();
 			}
 		}
+		
+		return this;
+	}
+	
+	protected String generateSelect(Column[] properties) throws SQLException {
+		StringBuilder sb = new StringBuilder("SELECT ");
+		for (Column column : properties) {
+			if (Expr.NO == column.getExprType()) {
+				sb.append(column.getFullColumnName()).append(" AS ").append(column.getLabel()).append(',');
+			}
+			else if ((Expr.OTHER.and(this.expr) && column.getExprType() == Expr.OTHER) 
+					|| (Expr.GROUP.and(this.expr) && column.getExprType() == Expr.GROUP)) {
+				
+				sb.append('(').append(column.getExpression()).append(") AS ").append(column.getLabel()).append(',');
+			}
+			/*else {
+				throw new SQLException("Find Expression Property, But Not Assign Query Expr Type " + column.getFullPropertyName());
+			}*/
+		}
+	
 		sb.setLength(sb.length() - 1);
 		return sb.toString();
 	}
 	
-	protected String generateGroup(String[] groups) throws SQLException {
+	protected String generateGroup(Column[] groups) throws SQLException {
 		if (groups == null || groups.length <= 0) {
 			return "";
 		}
 		
 		StringBuilder ret = new StringBuilder(" GROUP BY ");
 		
-		for (String p : groups) {
-			Column column = schema.getColumnByProperty(p);
+		for (Column column : groups) {
 			ret.append(column.getLabel()).append(',');
 		}
 		
@@ -120,7 +153,6 @@ public abstract class Query<T> {
 		StringBuilder ret = new StringBuilder(" ORDER BY ");
 		for (Sort s : sorts) {
 			Column column = s.getColumn();
-			//ret.append(column.getLabel()).append(' ').append(s.getDirection().name()).append(',');
 			if (column.isExpression()) {
 				ret.append('(').append(column.getExpression()).append(')');
 			}
@@ -142,7 +174,8 @@ public abstract class Query<T> {
 		
 		StringBuilder sb = new StringBuilder(condition);
 		
-		for (String s : schema.getProperties()) {
+		for (Column c : schema.getProperties()) {
+			String s = c.getFullPropertyName();
 			int pos = 0, start = -1, len = s.length();
 			
 			while((start = sb.indexOf(s, pos)) >= 0) {
@@ -185,12 +218,17 @@ public abstract class Query<T> {
 			for (int i = 1, len = meta.getColumnCount(); i <= len; i++) {
 				String label = meta.getColumnLabel(i);
 				Column column = schema.getColumnByLabel(label);
-				column.getSetter().invoke(obj, column.getType().getResult(rs, label));
+				column.set(obj, column.getType().getResult(rs, label));
 			}
 			return obj;
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new SQLException(e);
 		}
+	}
+	
+	protected String toJSON(ResultSet rs, ResultSetMetaData meta) {
+		// TODO Convert Result to JSON String
+		return null;
 	}
 	
 	protected void setValue(PreparedStatement stmt, Object[] values) throws SQLException {
@@ -248,16 +286,15 @@ public abstract class Query<T> {
 		return ret.length > 0 ? ret[0] : null;
 	}
 	
-	protected String generateUpdate(String[] properties) throws SQLException {
+	protected String generateUpdate(Column[] properties) throws SQLException {
 		StringBuilder p = new StringBuilder("UPDATE ").append(schema.getTableName()).append(" SET ");
 		
 		if (properties != null) {
-			for(String property: properties) {
-				Column column = schema.getColumnByProperty(property);
-				
+			for(Column column : properties) {
 				if (!column.isExpression()) {
 					p.append(column.getColumnName()).append(" = ?,");
 				}
+				
 			}
 			p.setLength(p.length() - 1);
 			return p.toString();
@@ -295,11 +332,11 @@ public abstract class Query<T> {
 	}
 	
 	public int insert(T data) throws SQLException {
-		lastInsertId = null;
-		StringBuilder sb1 = new StringBuilder("INSERT INTO ").append(schema.getTableName()).append(" (");
-		StringBuilder sb2 = new StringBuilder(" VALUES (");
+		//lastInsertId = null;
+		//StringBuilder sb1 = new StringBuilder("INSERT INTO ").append(schema.getTableName()).append(" (");
+		//StringBuilder sb2 = new StringBuilder(" VALUES (");
 		
-		Column[] columns = schema.getAllColumns();
+		Column[] columns = schema.getProperties();
 		Column[] ins_columns = new Column[columns.length];
 		Object[] ins_values = new Object[columns.length];
 		
@@ -313,35 +350,45 @@ public abstract class Query<T> {
 					continue;
 				}
 				
-				Object val = column.getGetter().invoke(data);
+				Object val = column.get(data);
 				if (val != null) {
-					sb1.append(column.getColumnName()).append(',');
-					sb2.append("?,");
+					//sb1.append(column.getColumnName()).append(',');
+					//sb2.append("?,");
 					ins_columns[ins_count] = column;
 					ins_values[ins_count] = val;
 					ins_count++;
 				}
-				else if (column.isAutoIncrement()) {
+				/*else if (column.isAutoIncrement()) {
 					if (!"".equals(column.getSequence())) {
 						sb1.append(column.getColumnName()).append(',');
 						sb2.append(column.getSequence()).append(',');
 					}
 					needGenerateKeys = true;
-				}
+				}*/
 				else if (!column.nullAble()){
-					sb1.append(column.getColumnName()).append(',');
-					sb2.append("?,");
+					//sb1.append(column.getColumnName()).append(',');
+					//sb2.append("?,");
 					ins_columns[ins_count] = column;
 					ins_values[ins_count] = column.getDefaultValue();
 					ins_count++;
 				}
 			}
 			
-			sb1.replace(sb1.length() - 1, sb1.length(), ")");
-			sb2.replace(sb2.length() - 1, sb2.length(), ")");
-			sql = new StringBuilder(sb1).append(sb2);
+			this.properties = new Column[ins_count];
+			this.values = new Object[ins_count];
+			System.arraycopy(ins_columns, 0, this.properties, 0, ins_count);
+			System.arraycopy(ins_values, 0, this.values, 0, ins_count);
 			
-			stmt = needGenerateKeys ? conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS) 
+			int ret = insert();
+			if (needGenerateKeys) {
+				schema.getAutoIncrementColumn().set(data, lastInsertId);
+			}
+			return ret;
+			//sb1.replace(sb1.length() - 1, sb1.length(), ")");
+			//sb2.replace(sb2.length() - 1, sb2.length(), ")");
+			//sql = new StringBuilder(sb1).append(sb2);
+			
+			/*stmt = needGenerateKeys ? conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS) 
 					: conn.prepareStatement(sql.toString());
 			
 			for (int i = 0; i < ins_count; i++) {
@@ -356,7 +403,7 @@ public abstract class Query<T> {
 					schema.getAutoIncrementColumn().getSetter().invoke(data, lastInsertId);
 				}
 			}
-			return ret;
+			return ret;*/
 			
 		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
 			throw new SQLException(e);
@@ -374,10 +421,11 @@ public abstract class Query<T> {
 	}
 	
 	public int update(T data) throws SQLException {
-		StringBuilder sb1 = new StringBuilder("UPDATE ").append(schema.getTableName()).append(" SET ");
-		StringBuilder sb2 = new StringBuilder(" WHERE ");
+		//StringBuilder sb1 = new StringBuilder("UPDATE ").append(schema.getTableName()).append(" SET ");
+		//StringBuilder sb2 = new StringBuilder(" WHERE ");
+		StringBuilder sb = new StringBuilder();
 		
-		Column[] columns = schema.getAllColumns();
+		Column[] columns = schema.getProperties();
 		
 		Column[] primaries = new Column[schema.getPrimaries().length];
 		Object[] primary_values = new Object[primaries.length];
@@ -394,19 +442,19 @@ public abstract class Query<T> {
 					continue;
 				}
 			
-				Object val = column.getGetter().invoke(data);
+				Object val = column.get(data);
 				if (val != null) {
 					if (column.isPrimary()) {
 						primaries[primary_count] = column;
 						primary_values[primary_count] = val;
 						primary_count++;
-						sb2.append(column.getColumnName()).append(" = ? AND ");
+						sb.append(column.getColumnName()).append(" = ? AND ");
 					}
 					else {
 						set_columns[set_count] = column;
 						set_values[set_count] = val;
 						set_count++;
-						sb1.append(column.getColumnName()).append(" = ?,");
+						//sb1.append(column.getColumnName()).append(" = ?,");
 					}
 				}
 			}
@@ -415,10 +463,18 @@ public abstract class Query<T> {
 				throw new SQLException("Value of Primary Key Not Set");
 			}
 			
-			sb1.setLength(sb1.length() - 1);
-			sb2.setLength(sb2.length() - 4);
+			this.properties = new Column[set_count];
+			System.arraycopy(set_columns, 0, this.properties, 0, set_count);
 			
-			sql = new StringBuilder(sb1).append(sb2);
+			this.values = new Object[set_count + primary_count];
+			System.arraycopy(set_values, 0, this.values, 0, set_count);
+			System.arraycopy(primary_values, 0, this.values, set_count, primary_count);
+			
+			sb.setLength(sb.length() - 4);
+			this.condition = sb.toString();
+			
+			return update();
+			/*sql = new StringBuilder(sb1).append(sb2);
 			
 			stmt = conn.prepareStatement(sql.toString());
 			
@@ -430,7 +486,7 @@ public abstract class Query<T> {
 				primaries[i].getType().setParam(stmt, set_count + i + 1, primary_values[i]);
 			}
 			
-			return stmt.executeUpdate();
+			return stmt.executeUpdate();*/
 			
 			
 		} catch (IllegalAccessException | IllegalArgumentException
@@ -485,10 +541,11 @@ public abstract class Query<T> {
 		sb2.append(" VALUES (");
 		
 		boolean found_auto_increment = false;
-		for (String p : properties) {
-			Column column = schema.getColumnByProperty(p);
+		for (Column column : properties) {
+		
 			if (column.isExpression()) {
-				throw new SQLException("Expression Column Found " + column.getPropertyName());
+				//throw new SQLException("Expression Column Found " + column.getPropertyName());
+				continue;
 			}
 			
 			if (column.isAutoIncrement()) {

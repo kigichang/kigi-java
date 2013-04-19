@@ -1,6 +1,7 @@
 package tw.kigi.data;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -126,14 +127,24 @@ public final class Column {
 	public String getSequence() {
 		return sequence;
 	}
-	public Method getSetter() {
+	
+	/*public Method getSetter() {
 		return setter;
 	}
+	
 	public Method getGetter() {
 		return getter;
-	}
+	}*/
 	
 	public boolean nullAble() {
 		return nullAble;
+	}
+	
+	public Object get(Object data) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		return getter.invoke(data);
+	}
+	
+	public void set(Object data, Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		setter.invoke(data, value);
 	}
 }

@@ -30,7 +30,7 @@ public final class Schema {
 	private HashMap<String, Column> labels = new HashMap<String, Column>();
 	private HashMap<String, Column> columns = new HashMap<String, Column>();
 	
-	private String[] properties = null;
+	private Column[] properties = null;
 	private Column[] primaries = null;
 	private Column autoIncrementColumn = null;
 	
@@ -65,7 +65,7 @@ public final class Schema {
 			throw new SQLException(e);
 		}
 		
-		List<String> lst = new ArrayList<String>();
+		List<Column> lst = new ArrayList<Column>();
 		List<Column> lst_p = new ArrayList<Column>();
 		
 		for (Field field : fields) {
@@ -80,7 +80,7 @@ public final class Schema {
 					autoIncrementColumn = column;
 				}
 				
-				lst.add(column.getFullPropertyName());
+				lst.add(column);
 				columns.put(column.getFullPropertyName(), column);
 				labels.put(column.getLabel(), column);
 				if (column.isPrimary()) {
@@ -101,16 +101,16 @@ public final class Schema {
 		
 		for (int i = 0, size = lst.size(); i < size; i++) {
 			for (int j = i + 1; j < size; j++) {
-				String a = lst.get(i);
-				String b = lst.get(j);
-				if (b.length() > a.length()) {
+				Column a = lst.get(i);
+				Column b = lst.get(j);
+				if (b.getFullPropertyName().length() > a.getFullPropertyName().length()) {
 					lst.set(i, b);
 					lst.set(j, a);
 				}
 			}
 		}
 		
-		properties = lst.toArray(new String[lst.size()]);
+		properties = lst.toArray(new Column[lst.size()]);
 	}
 
 	public String append(String property) {
@@ -148,7 +148,7 @@ public final class Schema {
 		return hasAutoIncrement;
 	}
 
-	public String[] getProperties() {
+	public Column[] getProperties() {
 		return properties;
 	}
 
@@ -168,9 +168,9 @@ public final class Schema {
 		return ret;
 	}
 	
-	public Column[] getAllColumns() {
+	/*public Column[] getAllColumns() {
 		return columns.values().toArray(new Column[columns.size()]);
-	}
+	}*/
 
 	public Column[] getPrimaries() {
 		return primaries;
