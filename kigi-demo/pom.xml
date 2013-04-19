@@ -20,15 +20,21 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>tw.kigi</groupId>
+    	<artifactId>kigi-data</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    	<scope>provided</scope>
+    </dependency>
   </dependencies>
   <build>
     <finalName>kigi-demo</finalName>
     <plugins>
-        <plugin>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-maven-plugin</artifactId>
-            <version>9.0.1.v20130408</version>
-            <configuration>
+    	<plugin>
+    		<groupId>org.eclipse.jetty</groupId>
+    		<artifactId>jetty-maven-plugin</artifactId>
+    		<version>9.0.1.v20130408</version>
+    		<configuration>
               <stopKey>CTRL+C</stopKey>
               <stopPort>8999</stopPort>
               <scanIntervalSeconds>10</scanIntervalSeconds>
@@ -42,9 +48,9 @@
                       <goal>run</goal>
                   </goals>
                   <configuration>
-                                <scanIntervalSeconds>0</scanIntervalSeconds>
-                                <daemon>true</daemon>
-                        </configuration>
+                    <scanIntervalSeconds>0</scanIntervalSeconds>
+                    <daemon>true</daemon>
+                  </configuration>
               </execution>
               <execution>
                         <id>stop-jetty</id>
@@ -54,8 +60,7 @@
                         </goals>
                 </execution>
             </executions>
-        </plugin>
+    	</plugin>
     </plugins>
   </build>
-  
 </project>
