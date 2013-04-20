@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 public @interface ManyToMany {
 	String schema();
 	String relation();
-	String foreignKey();
+	//String foreignKey();
 	String conditions();
 	String[] properties() default {};
 	OrderBy[] sort() default {};

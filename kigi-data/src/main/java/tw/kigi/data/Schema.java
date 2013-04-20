@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import tw.kigi.data.annotation.BelongsTo;
+import tw.kigi.data.annotation.HasMany;
+import tw.kigi.data.annotation.HasOne;
+import tw.kigi.data.annotation.ManyToMany;
+import tw.kigi.data.annotation.OrderBy;
 import tw.kigi.data.annotation.Property;
 import tw.kigi.util.Convention;
 
@@ -34,6 +39,7 @@ public final class Schema {
 	private Column[] primaries = null;
 	private Column autoIncrementColumn = null;
 	
+	private HashMap<String, Relation> relations = new HashMap<String, Relation>();
 	
 	private Schema(Class<?> clazz) throws SQLException {
 		this.clazz = clazz;
@@ -111,6 +117,30 @@ public final class Schema {
 		}
 		
 		properties = lst.toArray(new Column[lst.size()]);
+		
+		for (Field field : fields) {
+			HasOne one = field.getAnnotation(HasOne.class);
+			HasMany many = field.getAnnotation(HasMany.class);
+			BelongsTo to = field.getAnnotation(BelongsTo.class);
+			ManyToMany m2m = field.getAnnotation(ManyToMany.class);
+			
+			if (one != null) {
+				Relation r = new Relation(field, one);
+				relations.put(r.getName(), r);
+			}
+			else if (many != null) {
+				Relation r = new Relation(field, many);
+				relations.put(r.getName(), r);
+			}
+			else if (to != null) {
+				Relation r = new Relation(field, to);
+				relations.put(r.getName(), r);
+			}
+			else if (m2m != null) {
+				Relation r = new Relation(field, m2m);
+				relations.put(r.getName(), r);
+			}
+		}
 	}
 
 	public String append(String property) {
@@ -132,6 +162,32 @@ public final class Schema {
 		return array;
 	}
 
+	protected Column[] convertStringToColumn(String... properties) throws SQLException {
+		String[] tmp = append(properties);
+		List<Column> cols = new ArrayList<Column>();
+		for(String p : tmp) {
+			Column c = getColumnByProperty(p);
+			cols.add(c);
+		}
+		
+		return cols.toArray(new Column[cols.size()]);
+	}
+	
+	public Sort[] convertSort(OrderBy[] order) throws SQLException {
+		if (order == null) {
+			return null;
+		}
+		
+		Sort[] ret = new Sort[order.length];
+		for (int i = 0, len = order.length; i < len; i++) {
+			Column c = this.getColumnByProperty(this.append(order[i].property()));
+			Direction d = Direction.toDirection(order[i].direction());
+			ret[i] = new Sort(c, d);
+		}
+		
+		return ret;
+	}
+	
 	public Class<?> getClazz() {
 		return clazz;
 	}
@@ -180,4 +236,11 @@ public final class Schema {
 		return autoIncrementColumn;
 	}
 	
+	public Relation getRelation(String name) throws SQLException {
+		Relation ret = relations.get(name);
+		if (ret == null) {
+			throw new SQLException("Relation for " + name + " Not Found");
+		}
+		return ret;
+	}
 }

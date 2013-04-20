@@ -49,6 +49,21 @@ public final class Column {
 			defaultValue = type.defaultValue(property.defaultValue());
 			setter = clazz.getMethod("set" + propertyName, field.getType());
 			getter = clazz.getMethod((Boolean.class.equals(field.getType()) ? "is" : "get") + propertyName);
+			if ("".equals(property.expression()) && "".equals(property.expression())) {
+				expr = Expr.NO;
+				expression = "";
+			}
+			else if (!"".equals(property.expression()) && !"".equals(property.expression())) {
+				throw new SQLException("Duplicated Expression in Column " + propertyName);
+			}
+			else if (!"".equals(property.expression())) {
+				expr = Expr.OTHER;
+				expression = property.expression();
+			}
+			else if (!"".equals(property.group())) {
+				expr = Expr.GROUP;
+				expression = property.group();
+			}
 		} catch (NoSuchMethodException | SecurityException | ParseException e) {
 			throw new SQLException(e);
 		}
@@ -60,21 +75,6 @@ public final class Column {
 		fullColumnName = new StringBuilder(clazz.getSimpleName()).append('.').append(columnName).toString();
 		
 		label = new StringBuilder(clazz.getSimpleName()).append('_').append(propertyName).toString();
-				
-		//expression = property.expression();
-		//_expression = !"".equals(expression);
-		if ("".equals(property.expression()) && "".equals(property.expression())) {
-			expr = Expr.NO;
-			expression = "";
-		}
-		else if (!"".equals(property.expression())) {
-			expr = Expr.OTHER;
-			expression = property.expression();
-		}
-		else if (!"".equals(property.group())) {
-			expr = Expr.GROUP;
-			expression = property.group();
-		}
 		
 		primary = property.primary();
 		autoIncrement = property.autoIncrement();

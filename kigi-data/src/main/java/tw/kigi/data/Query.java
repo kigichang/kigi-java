@@ -31,6 +31,8 @@ public abstract class Query<T> {
 	protected StringBuilder sql = null;
 	protected byte expr = Expr.NO.byteValue();
 	
+	protected Relation[] relations = null;
+	
 	public abstract T[] paginate(int start, int length) throws SQLException, ParseException;
 	
 	public Query(Connection conn, Class<T> clazz) throws SQLException {
@@ -48,10 +50,11 @@ public abstract class Query<T> {
 		values = null;
 		needGenerateKeys = false;
 		expr = Expr.NO.byteValue();
+		relations = null;
 		return this;
 	}
 	
-	protected Column[] convertStringToColumn(String... properties) throws SQLException {
+	/*protected Column[] convertStringToColumn(String... properties) throws SQLException {
 		String[] tmp = schema.append(properties);
 		List<Column> cols = new ArrayList<Column>();
 		for(String p : tmp) {
@@ -60,10 +63,10 @@ public abstract class Query<T> {
 		}
 		
 		return cols.toArray(new Column[cols.size()]);
-	}
+	}*/
 	
 	public Query<T> properties(String... properties) throws SQLException {
-		this.properties = convertStringToColumn(properties);
+		this.properties = this.schema.convertStringToColumn(properties);
 		return this;
 	}
 	
@@ -78,7 +81,7 @@ public abstract class Query<T> {
 	}
 	
 	public Query<T> group(String... group) throws SQLException {
-		this.group = convertStringToColumn(group);
+		this.group = this.schema.convertStringToColumn(group);
 		if (this.group != null && this.group.length > 0) {
 			return expr(Expr.GROUP);
 		}
@@ -89,6 +92,19 @@ public abstract class Query<T> {
 		property = schema.append(property);
 		Column column = schema.getColumnByProperty(property);
 		order.add(new Sort(column, direction));
+		return this;
+	}
+	
+	public Query<T> with(String... relation) throws SQLException {
+		if (relation != null && relation.length > 0) {
+			int count = relation.length;
+			relations = new Relation[count];
+			for(String r : relation) {
+				count--;
+				relations[count] = this.schema.getRelation(r);
+			}
+		}
+		
 		return this;
 	}
 	
@@ -188,7 +204,7 @@ public abstract class Query<T> {
 	
 	protected String selectString() throws SQLException {
 		StringBuilder select = new StringBuilder();
-		if (properties == null) {
+		if (properties == null || properties.length <= 0) {
 			select.append(generateSelect(schema.getProperties()));
 		}
 		else {

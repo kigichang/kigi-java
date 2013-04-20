@@ -34,5 +34,12 @@ public class AppTest
     public void testApp()
     {
         assertTrue( true );
+        String[] abc = mytest();
+        System.out.println(abc);
+        System.out.println(abc.length);
+    }
+    
+    public String[] mytest(String... values) {
+    	return values;
     }
 }
