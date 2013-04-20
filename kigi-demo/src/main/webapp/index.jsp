@@ -92,5 +92,6 @@ for (Item item : items) {
 LastId <%=id %>
 <br />
 Item.CategoryId=<%=request.getParameter("Item.CategoryId") %>
+test reset
 </body>
 </html>
