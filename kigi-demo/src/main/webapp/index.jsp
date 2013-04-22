@@ -68,6 +68,8 @@ item_tmp.setDeleted(ItemDeleted.ALIVE);
 //item_tmp.setCreated(new java.util.Date());
 //q.insert(item_tmp);
 //id = item_tmp.getId();
+Item i19 = q.findById(new java.math.BigDecimal(19));
+out.println("<br />" + i19.getId() + ":" + i19.getMemo());
 conn.close();
 
 EnumType<ItemDeleted, Character> e_type = new EnumType<ItemDeleted, Character>(ItemDeleted.class);

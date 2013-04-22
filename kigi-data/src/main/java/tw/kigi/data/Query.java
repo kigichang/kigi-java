@@ -286,6 +286,18 @@ public abstract class Query<T> {
 		return ret.length > 0 ? ret[0] : null;
 	}
 	
+	public T findById(Object val) throws SQLException {
+		if (schema.getPrimaries().length > 1) {
+			throw new SQLException("Multi-Primary Found");
+		}
+		Column column = schema.getPrimaries()[0];
+		
+		condition(column.getFullPropertyName() + " = ?");
+		values(val);
+		
+		return findOne();
+	}
+	
 	protected String generateUpdate(Column[] properties) throws SQLException {
 		StringBuilder p = new StringBuilder("UPDATE ").append(schema.getTableName()).append(" SET ");
 		
