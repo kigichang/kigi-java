@@ -398,6 +398,12 @@ public enum Primitive implements Operator {
 			}
 		}
 		
+		public String toString(java.util.Date date) throws ParseException {
+			if (date != null) {
+				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+			}
+			throw new ParseException("Value is Null", 1);
+		}
 	},
 	
 	DATE(java.sql.Date.class) {
@@ -456,6 +462,12 @@ public enum Primitive implements Operator {
 			}
 		}
 		
+		public String toString(java.sql.Date date) throws ParseException {
+			if (date != null) {
+				return new SimpleDateFormat("yyyy-MM-dd").format(date);
+			}
+			throw new ParseException("Value is Null", 1);
+		}
 	},
 	
 	TIME(java.sql.Time.class) {
@@ -512,6 +524,13 @@ public enum Primitive implements Operator {
 			}
 		}
 		
+		public String toString(java.sql.Time time) throws ParseException {
+			if (time != null) {
+				return new SimpleDateFormat("HH:mm:ss").format(time);
+			}
+			throw new ParseException("Value is Null", 1);
+		}
+		
 	},
 	
 	TIMESTAMP(java.sql.Timestamp.class) {
@@ -551,8 +570,29 @@ public enum Primitive implements Operator {
 
 		@Override
 		public Object defaultValue(String value) throws ParseException {
-			// TODO Auto-generated method stub
-			return null;
+			switch(value) {
+			case "min":
+			case "Min":
+			case "MIN":
+				return parseValue("0001-01-01 00:00:00");
+			case "max":
+			case "Max":
+			case "MAX":
+				return parseValue("9999-12-31 23:59:59");
+			case "now":
+			case "Now":
+			case "NOW":
+				return new java.sql.Timestamp(System.currentTimeMillis());
+			default:
+				return parseValue(value);
+			}
+		}
+		
+		public String toString(java.sql.Timestamp timestamp) throws ParseException {
+			if (timestamp != null) {
+				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timestamp);
+			}
+			throw new ParseException("Value is Null", 1);
 		}
 		
 	},
