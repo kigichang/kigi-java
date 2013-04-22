@@ -26,6 +26,7 @@
   	<module>kigi-util</module>
   	<module>kigi-data</module>
     <module>kigi-demo</module>
+    <module>kigi-web</module>
   </modules>
   <build>
   	<plugins>
