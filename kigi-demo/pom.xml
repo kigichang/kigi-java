@@ -41,6 +41,32 @@
     	<version>2.5</version>
     	<scope>provided</scope>
     </dependency>
+    <dependency>
+    	<groupId>tw.kigi</groupId>
+    	<artifactId>kigi-web</artifactId>
+    	<version>0.0.1-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>javax.servlet.jsp</groupId>
+    	<artifactId>jsp-api</artifactId>
+    	<version>2.2</version>
+    	<scope>provided</scope>
+    </dependency>
+    <dependency>
+    	<groupId>commons-configuration</groupId>
+    	<artifactId>commons-configuration</artifactId>
+    	<version>1.9</version>
+    </dependency>
+    <dependency>
+    	<groupId>commons-codec</groupId>
+    	<artifactId>commons-codec</artifactId>
+    	<version>1.7</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    	<version>3.1</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>kigi-demo</finalName>

@@ -63,7 +63,7 @@ public enum Primitive implements Operator {
 		@Override
 		public BigDecimal parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new BigDecimal(value);
+				return value == null || value.length() == 0 ? null : new BigDecimal(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -105,7 +105,7 @@ public enum Primitive implements Operator {
 		@Override
 		public Long parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new Long(value);
+				return value == null || value.length() == 0 ? null : new Long(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -158,7 +158,7 @@ public enum Primitive implements Operator {
 		@Override
 		public Integer parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new Integer(value);
+				return value == null || value.length() == 0 ? null : new Integer(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -211,7 +211,7 @@ public enum Primitive implements Operator {
 		@Override
 		public Short parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new Short(value);
+				return value == null || value.length() == 0 ? null : new Short(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -263,7 +263,7 @@ public enum Primitive implements Operator {
 		@Override
 		public Float parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new Float(value);
+				return value == null || value.length() == 0 ? null : new Float(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -316,7 +316,7 @@ public enum Primitive implements Operator {
 		@Override
 		public Double parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new Double(value);
+				return value == null || value.length() == 0 ? null : new Double(value);
 			}
 			catch(NumberFormatException e) {
 				throw new ParseException(e.toString(), 1);
@@ -371,7 +371,7 @@ public enum Primitive implements Operator {
 		@Override
 		public java.util.Date parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value);
+				return value != null && value.length() == 19 ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value) : null;
 			}
 			catch(NullPointerException | IllegalArgumentException e) {
 				throw new ParseException(e.toString(), 1);
@@ -398,11 +398,11 @@ public enum Primitive implements Operator {
 			}
 		}
 		
-		public String toString(java.util.Date date) throws ParseException {
+		public String toString(java.util.Date date) {
 			if (date != null) {
 				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
 			}
-			throw new ParseException("Value is Null", 1);
+			return null;
 		}
 	},
 	
@@ -434,8 +434,9 @@ public enum Primitive implements Operator {
 		@Override
 		public java.sql.Date parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null 
-						: new java.sql.Date(new SimpleDateFormat("yyyy-MM-dd").parse(value).getTime());
+				return value != null && value.length() == 10 ? 
+						new java.sql.Date(new SimpleDateFormat("yyyy-MM-dd").parse(value).getTime())
+						: null;
 			}
 			catch(NullPointerException | IllegalArgumentException e) {
 				throw new ParseException(e.toString(), 1);
@@ -462,11 +463,11 @@ public enum Primitive implements Operator {
 			}
 		}
 		
-		public String toString(java.sql.Date date) throws ParseException {
+		public String toString(java.sql.Date date) {
 			if (date != null) {
 				return new SimpleDateFormat("yyyy-MM-dd").format(date);
 			}
-			throw new ParseException("Value is Null", 1);
+			return null;
 		}
 	},
 	
@@ -497,7 +498,9 @@ public enum Primitive implements Operator {
 		@Override
 		public java.sql.Time parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new java.sql.Time(new SimpleDateFormat("HH:mm:ss").parse(value).getTime());
+				return value != null && value.length() == 8 ? 
+						new java.sql.Time(new SimpleDateFormat("HH:mm:ss").parse(value).getTime())
+						: null;
 			}
 			catch(NullPointerException | IllegalArgumentException e) {
 				throw new ParseException(e.toString(), 1);
@@ -524,11 +527,11 @@ public enum Primitive implements Operator {
 			}
 		}
 		
-		public String toString(java.sql.Time time) throws ParseException {
+		public String toString(java.sql.Time time) {
 			if (time != null) {
 				return new SimpleDateFormat("HH:mm:ss").format(time);
 			}
-			throw new ParseException("Value is Null", 1);
+			return null;
 		}
 		
 	},
@@ -561,7 +564,9 @@ public enum Primitive implements Operator {
 		@Override
 		public java.sql.Timestamp parseValue(String value) throws ParseException {
 			try {
-				return value == null ? null : new java.sql.Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value).getTime());
+				return value != null && value.length() == 19 ? 
+						new java.sql.Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value).getTime())
+						: null;
 			}
 			catch(NullPointerException | IllegalArgumentException e) {
 				throw new ParseException(e.toString(), 1);
@@ -588,11 +593,11 @@ public enum Primitive implements Operator {
 			}
 		}
 		
-		public String toString(java.sql.Timestamp timestamp) throws ParseException {
+		public String toString(java.sql.Timestamp timestamp) {
 			if (timestamp != null) {
 				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(timestamp);
 			}
-			throw new ParseException("Value is Null", 1);
+			return null;
 		}
 		
 	},

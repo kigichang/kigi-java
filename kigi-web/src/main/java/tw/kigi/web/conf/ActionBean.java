@@ -12,10 +12,10 @@ public class ActionBean {
 	String[] mappings = null;
 	
 	
-	public Method getMethod(String path) {
+	public ActionMethod getMethod(String path) {
 		for (int i = 0, size = methods.length; i < size; i++) {
 			if (path.equals(methods[i].path)) {
-				return methods[i].method;
+				return methods[i];
 			}
 		}
 		
