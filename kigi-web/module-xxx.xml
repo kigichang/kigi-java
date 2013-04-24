@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+	<global-mappings>
+		<forward name='abc' path='abc.jsp' />
+		<forward name='def' path='abc.jsp' />
+		<forward name='ghi' path='abc.jsp' />
+		<include name='ccc' path='ccc.jsp' />
+		<include name='bbb' path='bbb.jsp' />
+		<redirect name='home' path='/' />
+	</global-mappings>
+	
+	<actions>
+		<action name='test1' class="tw.kigi.web.Test1" path="/test1">
+			<method name='abc' path='/abc' />
+			<method name='def' path='/def' />
+			<forward name='aaa' path="abc.jsp" />
+			<include name='ccc' path='ccc.jsp' />
+			<include name='bbb' path='bbb.jsp' />
+			<redirect name='home' path='/' />
+		</action>
+	</actions>
+</module>

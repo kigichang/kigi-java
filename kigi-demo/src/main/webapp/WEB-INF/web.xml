@@ -4,4 +4,12 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
+  <filter>
+  	<filter-name>TestFilter</filter-name>
+  	<filter-class>tw.kigi.test.TestFilter</filter-class>
+  </filter>
+  <filter-mapping>
+  	<filter-name>TestFilter</filter-name>
+  	<url-pattern>/test</url-pattern>
+  </filter-mapping>
 </web-app>
