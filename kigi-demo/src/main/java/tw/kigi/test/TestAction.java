@@ -17,7 +17,7 @@ public class TestAction extends Action {
 			HttpServletResponse response, ActionMapping mapping) throws ServletException, IOException {
 		String map = request.getParameter("map");
 		map = map == null || map.length() == 0 ? "abc" : map;
-		return mapping.findNext(map);
+		return mapping.findNext(map).param("test", "xxx");
 	}
 
 }
