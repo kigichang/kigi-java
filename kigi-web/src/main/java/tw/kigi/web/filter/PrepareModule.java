@@ -23,9 +23,11 @@ import org.apache.commons.configuration.ConfigurationException;
 import tw.kigi.web.Action;
 import tw.kigi.web.ActionMapping;
 import tw.kigi.web.ActionNext;
+import tw.kigi.web.ActionType;
 import tw.kigi.web.conf.ActionBean;
 import tw.kigi.web.conf.ActionMethod;
 import tw.kigi.web.conf.Module;
+import tw.kigi.web.conf.MyConst;
 import tw.kigi.web.conf.WebConfig;
 
 public class PrepareModule implements Filter {
@@ -56,6 +58,8 @@ public class PrepareModule implements Filter {
 			return;
 		}
 		
+		request.setAttribute(MyConst.ATTR_MODULE, tmp[0]);
+		
 		String action_name = tmp.length > 1 ? tmp[1] : "/";
 		
 		ActionBean bean = module.getAction(action_name);
@@ -73,11 +77,28 @@ public class PrepareModule implements Filter {
 			ActionMapping mapping = new ActionMapping(module.getGlobalMappings(), bean.getMappings());
 			Action action = (Action)Class.forName(bean.getClassName()).newInstance();
 			setEncoding(request);
+			
+			next = action.beforeFilter(request, response, mapping);
+			
+			if (next != null) {
+				next.handle(request, response);
+				if (next.getType() != ActionType.INCLUDE) {
+					return;
+				}
+			}
+			
 			if (method == null) {
 				next = action.unspecified(request, response, mapping);
 			}
 			else {
 				next = method.invoke(action, request, response, mapping);
+			}
+			
+			if (next != null) {
+				next.handle(request, response);
+				if (next.getType() != ActionType.INCLUDE) {
+					return;
+				}
 			}
 		} catch (InstantiationException | IllegalAccessException
 				| ClassNotFoundException | IllegalArgumentException | InvocationTargetException e) {
@@ -89,7 +110,7 @@ public class PrepareModule implements Filter {
 
 	@Override
 	public void init(FilterConfig config) throws ServletException {
-		String path = new StringBuilder(config.getServletContext().getRealPath("/")).append(File.separatorChar).append("WEB-INF").toString();
+		String path = new StringBuilder(config.getServletContext().getRealPath("/")).append(File.separatorChar).append("WEB-INF").append(File.separatorChar).toString();
 		
 		try {
 			for (Enumeration<?> e = config.getInitParameterNames(); e.hasMoreElements();) {

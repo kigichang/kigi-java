@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang3.ArrayUtils;
 
 import tw.kigi.web.Action;
 import tw.kigi.web.ActionMapping;
@@ -69,8 +70,12 @@ public class WebConfig {
 		int redirect_size = elementSize(parent, "redirect", "name");
 		int include_size = elementSize(parent, "include", "name");
 		
+		int total = forward_size + include_size + redirect_size;
+		if (total == 0) {
+			return ArrayUtils.EMPTY_STRING_ARRAY;
+		}
 		
-		String[] ret = new String[(forward_size + include_size + redirect_size) * 3];
+		String[] ret = new String[total * 3];
 		
 		int start = 0;
 		getMapping(parent, ActionType.FORWARD, forward_size, start, ret);

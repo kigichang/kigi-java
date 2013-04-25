@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module>
+	<global-mappings>
+		<forward name='abc' path='a.jsp?p=abc' />
+		<forward name='def' path='a.jsp?p=def' />
+		<forward name='ghi' path='a.jsp?p=ghi' />
+		<include name='ccc' path='b.jsp?p=ccc' />
+		<include name='bbb' path='b.jsp?p=bbb' />
+		<redirect name='home' path='http://www.gohappy.com.tw' />
+	</global-mappings>
+	
+	<actions>
+		<action name='test1' class="tw.kigi.test.TestAction" path="/test1">
+			<forward name='abc' path='a.jsp?p=test1_abc' />
+			<forward name='xyz' path='/path1/test1/?map=bbb' />
+		</action>
+	</actions>
+</module>
