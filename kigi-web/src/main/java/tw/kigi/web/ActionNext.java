@@ -88,7 +88,6 @@ public class ActionNext {
 			break;
 		case REDIRECT:
 			handleRedirect(resp);
-			break;
 		}
 	}
 	

@@ -3,8 +3,7 @@ package tw.kigi.web;
 public enum ActionType {
 	FORWARD,
 	INCLUDE,
-	REDIRECT,
-	ACTION;
+	REDIRECT;
 	
 	public String elementString() {
 		return name().toLowerCase();

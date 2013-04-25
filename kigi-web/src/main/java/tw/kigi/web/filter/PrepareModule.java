@@ -24,6 +24,7 @@ import tw.kigi.web.Action;
 import tw.kigi.web.ActionMapping;
 import tw.kigi.web.ActionNext;
 import tw.kigi.web.ActionType;
+import tw.kigi.web.Request;
 import tw.kigi.web.conf.ActionBean;
 import tw.kigi.web.conf.ActionMethod;
 import tw.kigi.web.conf.Module;
@@ -31,10 +32,6 @@ import tw.kigi.web.conf.MyConst;
 import tw.kigi.web.conf.WebConfig;
 
 public class PrepareModule implements Filter {
-
-	private HashMap<String, Module> modules = new HashMap<String, Module>();
-	
-	private static String encoding = "UTF-8";
 	
 	@Override
 	public void destroy() {
@@ -46,12 +43,12 @@ public class PrepareModule implements Filter {
 	public void doFilter(ServletRequest req, ServletResponse resp,
 			FilterChain chain) throws IOException, ServletException {
 		
-		HttpServletRequest request = (HttpServletRequest)req;
+		Request request = new Request((HttpServletRequest)req);
 		HttpServletResponse response = (HttpServletResponse)resp;
 		String request_uri = request.getRequestURI();
 		String[] tmp = splitURI(request_uri);
 		
-		Module module = modules.get(tmp[0]);
+		Module module = Module.getModule(tmp[0]);
 		
 		if (module == null) {
 			chain.doFilter(req, resp);
@@ -123,7 +120,7 @@ public class PrepareModule implements Filter {
 				WebConfig web = new WebConfig(path + file);
 				String[] global_mappings = web.getGlobalMappings();
 				HashMap<String, ActionBean> actions = web.getActions();
-				modules.put(param, new Module(global_mappings, actions));
+				Module.putModule(param, new Module(global_mappings, actions));
 				
 			}
 		} catch (ConfigurationException | NoSuchMethodException | SecurityException | ClassNotFoundException e) {
@@ -162,7 +159,7 @@ public class PrepareModule implements Filter {
 	}
 	
 	protected void setEncoding(HttpServletRequest request) {
-		String enc = PrepareModule.encoding;
+		String enc = MyConst.DEFAULT_ENCODING;
 		
 		try {
 			if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
