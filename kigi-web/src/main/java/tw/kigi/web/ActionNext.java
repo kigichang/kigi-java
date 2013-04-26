@@ -12,7 +12,7 @@ public class ActionNext {
 	private String name = null;
 	private String path = null;
 	private ActionType type = null;
-	private StringBuilder params = null;
+	//private StringBuilder params = null;
 	
 	public ActionNext(String name, String path, ActionType type) {
 		this.name = name;
